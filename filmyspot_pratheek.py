@@ -64,6 +64,10 @@ async def main_FilmySpot_Movies():
                             metrics[bot]["response_times"] = []
                         metrics[bot]["response_times"].append(response_time)
 
+                    # Append metrics to status message
+                    if bot in metrics:
+                        status_message += f"\n        ⌊ {metrics[bot]}"
+
                 except FloodWait as e:
                     await asyncio.sleep(e.x)
 
