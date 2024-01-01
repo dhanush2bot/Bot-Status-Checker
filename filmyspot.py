@@ -32,11 +32,10 @@ async def main_FilmySpot_Movies():
                     yyy_pratheek = await app.send_message(bot, "/start")
                     await asyncio.sleep(10)
                     zzz_pratheek = app.get_chat_history(bot, limit=1)
-                    async for ccc in zzz_pratheek:
-                        bbb = ccc.id
+                    last_message = await zzz_pratheek.__anext__()
                     response_time = (datetime.datetime.now() - start_time).total_seconds()
 
-                    if yyy_pratheek.message_id == bbb:
+                    if yyy_pratheek.message_id == last_message.message_id:
                         # Bot is down
                         status_message += f"\n🤖  @{bot}\n        └ **Status:** ❌ Down\n        └ **Response Time:** {response_time:.2f}s"
                         # Update metrics
