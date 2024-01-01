@@ -1,4 +1,4 @@
-from pyrogram import Client, filters
+from pyrogram import Client
 from pyrogram.errors import FloodWait
 import asyncio
 import datetime
@@ -23,53 +23,43 @@ BOT_ADMIN_IDS = [int(i.strip()) for i in os.environ.get("BOT_ADMIN_IDS").split('
 async def main_FilmySpot_Movies():
     async with app:
         while True:
-            print("Checking...")
+            print("Checking bot status...")
             status_message = "📊 | 𝗟𝗜𝗩𝗘 𝗕𝗢𝗧 𝗦𝗧𝗔𝗧𝗨𝗦\n"
             for bot in BOT_LIST:
                 try:
-                    # Start time to measure response time
-                    start_time = datetime.datetime.now()
-
                     # Send /start command to bot
+                    start_time = datetime.datetime.now()
                     yyy_pratheek = await app.send_message(bot, "/start")
-                    aaa = yyy_pratheek.id
                     await asyncio.sleep(10)
                     zzz_pratheek = app.get_chat_history(bot, limit=1)
                     async for ccc in zzz_pratheek:
                         bbb = ccc.id
-                    if aaa == bbb:
+                    response_time = (datetime.datetime.now() - start_time).total_seconds()
+
+                    if yyy_pratheek.message_id == bbb:
                         # Bot is down
-                        status_message += f"\n🤖  @{bot}\n        └ **Down** ❌"
+                        status_message += f"\n🤖  @{bot}\n        └ **Status:** ❌ Down\n        └ **Response Time:** {response_time:.2f}s"
                         # Update metrics
                         if bot not in metrics:
-                            metrics[bot] = {"down_count": 1, "up_count": 0}
+                            metrics[bot] = {"status": "down", "response_times": [response_time]}
                         else:
-                            metrics[bot]["down_count"] += 1
+                            metrics[bot]["status"] = "down"
+                            metrics[bot]["response_times"].append(response_time)
                     else:
                         # Bot is alive
-                        status_message += f"\n🤖  @{bot}\n        └ **Alive** ✅"
+                        status_message += f"\n🤖  @{bot}\n        └ **Status:** ✅ Alive\n        └ **Response Time:** {response_time:.2f}s"
                         # Update metrics
                         if bot not in metrics:
-                            metrics[bot] = {"down_count": 0, "up_count": 1}
+                            metrics[bot] = {"status": "alive", "response_times": [response_time]}
                         else:
-                            metrics[bot]["up_count"] += 1
-
-                    # Calculate response time
-                    end_time = datetime.datetime.now()
-                    response_time = (end_time - start_time).total_seconds()
-
-                    # Update metrics with response time
-                    if bot in metrics:
-                        if "response_times" not in metrics[bot]:
-                            metrics[bot]["response_times"] = []
-                        metrics[bot]["response_times"].append(response_time)
-
-                    # Append metrics to status message
-                    if bot in metrics:
-                        status_message += f"\n        ⌊ {metrics[bot]}"
+                            metrics[bot]["status"] = "alive"
+                            metrics[bot]["response_times"].append(response_time)
 
                 except FloodWait as e:
                     await asyncio.sleep(e.x)
+
+                except Exception as ex:
+                    status_message += f"\n🤖  @{bot}\n        └ **Error:** ❗ {str(ex)}"
 
             # Update status message with last checked time and timezone
             time = datetime.datetime.now(pytz.timezone(f"{TIME_ZONE}"))
@@ -78,9 +68,6 @@ async def main_FilmySpot_Movies():
 
             # Update the message in the channel or group
             await app.edit_message_text(int(CHANNEL_OR_GROUP_ID), MESSAGE_ID, status_message)
-
-            # Print metrics
-            print("Metrics:", metrics)
 
             # Sleep for 6300 seconds (approximately 105 minutes) before checking again
             await asyncio.sleep(6300)
